@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Museografía de Trajes AR</title>
+    <!-- A-Frame 1.6.0 -->
+    <script src="https://aframe.io/releases/1.6.0/aframe.min.js"></script>
+    <!-- AR.js for A-Frame -->
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <!-- Extras for animation/loaders if needed -->
+    <script src="https://cdn.jsdelivr.net/gh/c-frame/aframe-extras@7.4.0/dist/aframe-extras.min.js"></script>
+
+    <style>
+        body { margin: 0; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        /* UI Overlay */
+        #ui-layer {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            pointer-events: none; /* Let clicks pass through to canvas if needed, but buttons catch them */
+        }
+
+        .nav-btn {
+            background: rgba(255, 255, 255, 0.9);
+            border: 2px solid #333;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            margin: 0 20px;
+            font-size: 24px;
+            cursor: pointer;
+            pointer-events: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .nav-btn:active {
+            transform: scale(0.9);
+            background: #f0f0f0;
+        }
+
+        #info-overlay {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px;
+            border-radius: 8px;
+            display: none; /* Hidden by default, can act as debug or help */
+        }
+
+        /* Loading Screen */
+        .arjs-loader {
+            height: 100%;
+            width: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.8);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .arjs-loader div {
+            text-align: center;
+            font-size: 1.25em;
+            color: white;
+        }
+    </style>
+</head>
+<body style="margin: 0; overflow: hidden;">
+
+    <!-- Minimal Loader -->
+    <div class="arjs-loader">
+        <div>Cargando experiencia AR...</div>
+    </div>
+
+    <!-- UI Buttons -->
+    <div id="ui-layer">
+        <div class="nav-btn" id="btn-prev">❮</div>
+        <div class="nav-btn" id="btn-next">❯</div>
+    </div>
+
+    <!-- A-Frame Scene -->
+    <!-- embedded arjs: sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3; -->
+    <a-scene 
+        embedded 
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+        renderer="logarithmicDepthBuffer: true; colorManagement: true; sortObjects: true;"
+        vr-mode-ui="enabled: false"
+        shadow="type: pcfsoft">
+
+        <!-- Assets Management -->
+        <a-assets>
+            <a-asset-item id="model1" src="assets/models/modelo1.glb"></a-asset-item>
+            <a-asset-item id="model2" src="assets/models/modelo2.glb"></a-asset-item>
+            <a-asset-item id="model3" src="assets/models/modelo3.glb"></a-asset-item>
+            <a-asset-item id="model4" src="assets/models/modelo4.glb"></a-asset-item>
+            <!-- Audio Placeholder -->
+            <!-- <audio id="ambient-sound" src="assets/audio/ambience.mp3" loop="true"></audio> -->
+            <!-- Custom Mixins for Bubble Text -->
+            <a-mixin id="bubble-text" 
+                text="align: center; color: black; width: 1.8; wrapCount: 20; lineHeight: 50;"
+                position="0 0 0.01"></a-mixin>
+            <a-mixin id="bubble-bg" 
+                geometry="primitive: plane; width: 2.2; height: 1.2" 
+                material="color: white; shader: flat; opacity: 0.95; side: double"></a-mixin>
+        </a-assets>
+
+        <!-- Lighting -->
+        <a-entity light="type: ambient; color: #FFF; intensity: 0.6"></a-entity>
+        <a-entity light="type: directional; color: #FFD27F; intensity: 0.8; castShadow: true; shadowMapHeight: 2048; shadowMapWidth: 2048;" 
+                  position="-2 4 2" 
+                  target="#marker-root"></a-entity>
+
+        <!-- Marker -->
+        <a-marker preset="hiro" id="marker-root">
+            
+            <!-- Environment Floor (Spanish Street) -->
+            <a-circle rotation="-90 0 0" radius="4" 
+                      material="color: #6d4c41; roughness: 0.9; metalness: 0.1;" 
+                      shadow="receive: true">
+                <!-- Fallback texture simulation with noise if texture load fails -->
+            </a-circle>
+
+            <!-- Decorative Elements: Dust Particles (Simple implementation) -->
+            <!-- Using simple spheres for dust -->
+            <a-entity id="dust-system" position="0 1 0"></a-entity>
+
+            <!-- Models Container -->
+            <!-- Model 1 -->
+            <a-entity id="container-model-1" visible="true" scale="0.5 0.5 0.5">
+                <a-entity gltf-model="#model1" 
+                          animation-mixer="clip: *; loop: repeat; timeScale: 1" 
+                          shadow="cast: true; receive: true"
+                          animation="property: position; to: 0 0.05 0; dir: alternate; dur: 2000; loop: true; easing: easeInOutSine">
+                </a-entity>
+                <!-- Speech Bubble 1 -->
+                <a-entity position="0.8 1.8 0" rotation="0 0 0" class="speech-bubble">
+                    <a-entity mixin="bubble-bg" material="color: white; border: 2px solid black"></a-entity>
+                    <a-entity mixin="bubble-text" value="Si quieres, dime: \n ¿Es para clase?"></a-entity>
+                    <!-- Little tail for bubble -->
+                    <a-triangle vertex-a="0 -0.7 0" vertex-b="-0.1 -0.5 0" vertex-c="0.1 -0.5 0" color="white" position="0 0 0.01"></a-triangle>
+                </a-entity>
+            </a-entity>
+
+            <!-- Model 2 -->
+            <a-entity id="container-model-2" visible="false" scale="0.5 0.5 0.5">
+                <a-entity gltf-model="#model2" 
+                          animation-mixer="clip: *; loop: repeat; timeScale: 1" 
+                          shadow="cast: true; receive: true"
+                          animation="property: position; to: 0 0.05 0; dir: alternate; dur: 2200; loop: true; easing: easeInOutSine">
+                </a-entity>
+                 <!-- Speech Bubble 2 -->
+                 <a-entity position="-0.8 1.8 0" rotation="0 0 0" class="speech-bubble">
+                    <a-entity mixin="bubble-bg"></a-entity>
+                    <a-entity mixin="bubble-text" value="¿Nivel básico, medio \n o proyecto final?"></a-entity>
+                     <a-triangle vertex-a="0 -0.7 0" vertex-b="-0.1 -0.5 0" vertex-c="0.1 -0.5 0" color="white" position="0 0 0.01"></a-triangle>
+                </a-entity>
+            </a-entity>
+
+            <!-- Model 3 -->
+            <a-entity id="container-model-3" visible="false" scale="0.5 0.5 0.5">
+                <a-entity gltf-model="#model3" 
+                          animation-mixer="clip: *; loop: repeat; timeScale: 1" 
+                          shadow="cast: true; receive: true"
+                          animation="property: position; to: 0 0.05 0; dir: alternate; dur: 2100; loop: true; easing: easeInOutSine">
+                </a-entity>
+                 <!-- Speech Bubble 3 -->
+                 <a-entity position="0.8 1.8 0" rotation="0 0 0" class="speech-bubble">
+                    <a-entity mixin="bubble-bg"></a-entity>
+                    <a-entity mixin="bubble-text" value="¿Quieres que se vea \n más industrial, futurista \n o minimalista?"></a-entity>
+                     <a-triangle vertex-a="0 -0.7 0" vertex-b="-0.1 -0.5 0" vertex-c="0.1 -0.5 0" color="white" position="0 0 0.01"></a-triangle>
+                </a-entity>
+            </a-entity>
+
+            <!-- Model 4 -->
+            <a-entity id="container-model-4" visible="false" scale="0.5 0.5 0.5">
+                <a-entity gltf-model="#model4" 
+                          animation-mixer="clip: *; loop: repeat; timeScale: 1" 
+                          shadow="cast: true; receive: true"
+                          animation="property: position; to: 0 0.05 0; dir: alternate; dur: 2300; loop: true; easing: easeInOutSine">
+                </a-entity>
+                 <!-- Speech Bubble 4 -->
+                 <a-entity position="-0.8 1.8 0" rotation="0 0 0" class="speech-bubble">
+                    <a-entity mixin="bubble-bg"></a-entity>
+                    <a-entity mixin="bubble-text" value="Y lo diseñamos \n más alineado \n a tu estilo."></a-entity>
+                     <a-triangle vertex-a="0 -0.7 0" vertex-b="-0.1 -0.5 0" vertex-c="0.1 -0.5 0" color="white" position="0 0 0.01"></a-triangle>
+                </a-entity>
+            </a-entity>
+
+        </a-marker>
+
+        <!-- Camera -->
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        // --- Conf ---
+        let currentModelIndex = 0;
+        const totalModels = 4;
+        const fadeDuration = 500; // ms
+        
+        // --- Sound Init (User Interactions required for Audio) ---
+        // Need to add listener for first click to start audio context if we had audio
+        window.addEventListener('click', () => {
+             // const audio = document.querySelector('#ambient-sound');
+             // if(audio) audio.play().catch(e => console.log("Audio play failed", e));
+        }, { once: true });
+
+        // --- Controller Logic ---
+        function updateVisibility() {
+            // Hide all first
+            for (let i = 1; i <= totalModels; i++) {
+                const el = document.getElementById(`container-model-${i}`);
+                if (el) {
+                    // Create fade out effect manually if A-Frame animation isn't enough
+                    el.setAttribute('visible', false);
+                }
+            }
+
+            // Show current
+            const currentEl = document.getElementById(`container-model-${currentModelIndex + 1}`);
+            if (currentEl) {
+                currentEl.setAttribute('visible', true);
+                
+                // Trigger pop animation for speech bubble
+                const bubble = currentEl.querySelector('.speech-bubble');
+                if(bubble) {
+                    bubble.setAttribute('scale', '0 0 0');
+                    bubble.setAttribute('animation', 'property: scale; to: 1 1 1; dur: 600; easing: easeOutElastic');
+                }
+            }
+        }
+
+        function nextModel() {
+            currentModelIndex = (currentModelIndex + 1) % totalModels;
+            updateVisibility();
+        }
+
+        function prevModel() {
+            currentModelIndex = (currentModelIndex - 1 + totalModels) % totalModels;
+            updateVisibility();
+        }
+
+        // --- Dust Particles ---
+        function createDust() {
+            const dustContainer = document.querySelector('#dust-system');
+            const particleCount = 20;
+            
+            for(let i=0; i<particleCount; i++) {
+                const p = document.createElement('a-circle');
+                p.setAttribute('color', '#FFD27F');
+                p.setAttribute('radius', Math.random() * 0.02 + 0.005);
+                p.setAttribute('opacity', Math.random() * 0.5 + 0.2);
+                p.setAttribute('rotation', '-90 0 0'); // Face up/down technically but billboards better usually. actually circles in AR look mostly ok.
+                
+                // Random pos within 2m radius
+                const x = (Math.random() - 0.5) * 4;
+                const z = (Math.random() - 0.5) * 4;
+                const y = Math.random() * 2;
+                
+                p.setAttribute('position', `${x} ${y} ${z}`);
+                
+                // Simple animation
+                p.setAttribute('animation', `property: position; to: ${x} ${y+1} ${z}; dur: ${4000 + Math.random()*2000}; loop: true; easing: linear`);
+                p.setAttribute('animation__fade', `property: opacity; from: 0; to: 0; dur: ${4000 + Math.random()*2000}; loop: true; easing: linear`);
+                
+                dustContainer.appendChild(p);
+            }
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('btn-next').addEventListener('click', nextModel);
+        document.getElementById('btn-prev').addEventListener('click', prevModel);
+
+        // Touch Gestures (Simple Swipe)
+        let touchStartX = 0;
+        let touchEndX = 0;
+        
+        document.addEventListener('touchstart', e => {
+            touchStartX = e.changedTouches[0].screenX;
+        });
+
+        document.addEventListener('touchend', e => {
+            touchEndX = e.changedTouches[0].screenX;
+            handleSwipe();
+        });
+
+        function handleSwipe() {
+            if (touchEndX < touchStartX - 50) nextModel();
+            if (touchEndX > touchStartX + 50) prevModel();
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            updateVisibility();
+            createDust();
+            
+            // Remove Loader when scene loaded
+            const scene = document.querySelector('a-scene');
+            scene.addEventListener('loaded', () => {
+                document.querySelector('.arjs-loader').style.display = 'none';
+            })
+        });
+
+    </script>
+</body>
+</html>
